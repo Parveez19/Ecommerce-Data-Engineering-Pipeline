@@ -1,5 +1,9 @@
 import mysql.connector
 import pandas as pd
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 df = pd.read_csv('data.csv', encoding="latin1")
 
@@ -22,10 +26,10 @@ df['InvoiceDate'] = df['InvoiceDate'].dt.strftime('%Y-%m-%d %H:%M:%S')
 
 # connect
 conn = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='Ahmed@123',
-    database='ecom'
+    host= os.getenv('DB_HOST'),
+    user= os.getenv('DB_USER'),
+    password= os.getenv('PASSWORD') ,
+    database= os.getenv('DB_NAME')
 )
 
 cursor = conn.cursor()
