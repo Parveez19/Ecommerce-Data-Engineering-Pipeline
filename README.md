@@ -24,3 +24,44 @@ E-commerce transaction dataset from Kaggle.
 3. Run:
 ```bash
 python scripts/load_to_mysql.py
+
+
+
+
+
+## SQL Analytics (Phase 2)
+
+The following queries were used to analyze revenue distribution, product performance,
+and time-based trends using MySQL.
+
+
+
+ 1. Total Revenue by Country
+
+SELECT 
+    Country,
+    ROUND(SUM(TotalPrice), 2) AS total_revenue
+FROM ecommerce_orders
+WHERE Country IS NOT NULL
+GROUP BY Country
+ORDER BY total_revenue DESC;
+
+2. Top 10 Products by Revenue (Excluding Non-Product SKUs)
+
+SELECT 
+    StockCode,
+    Description,
+    ROUND(SUM(TotalPrice), 2) AS product_revenue
+FROM ecommerce_orders
+WHERE StockCode NOT IN ('POST', 'DOT', 'M')
+GROUP BY StockCode, Description
+ORDER BY product_revenue DESC
+LIMIT 10;
+
+3. Daily Revenue Trend
+SELECT 
+    DATE(InvoiceDate) AS order_date,
+    ROUND(SUM(TotalPrice), 2) AS daily_revenue
+FROM ecommerce_orders
+GROUP BY DATE(InvoiceDate)
+ORDER BY order_date ASC;
