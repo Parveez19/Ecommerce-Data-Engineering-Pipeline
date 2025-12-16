@@ -65,3 +65,23 @@ SELECT
 FROM ecommerce_orders
 GROUP BY DATE(InvoiceDate)
 ORDER BY order_date ASC;
+
+4 — MONTHLY REVENUE TREND
+SELECT
+    YEAR(InvoiceDate) AS year,
+    MONTH(InvoiceDate) AS month,
+    ROUND(SUM(TotalPrice), 2) AS monthly_revenue
+FROM ecommerce_orders
+GROUP BY YEAR(InvoiceDate), MONTH(InvoiceDate)
+ORDER BY year, month;
+
+5-Average Order Value
+SELECT
+    ROUND(AVG(invoice_revenue), 2) AS average_order_value
+FROM (
+    SELECT
+        InvoiceNo,
+        SUM(TotalPrice) AS invoice_revenue
+    FROM ecommerce_orders
+    GROUP BY InvoiceNo
+) t;
