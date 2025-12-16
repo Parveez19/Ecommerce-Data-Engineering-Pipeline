@@ -96,3 +96,21 @@ Duplicate invoice–product combinations were detected and flagged for further b
 
 invalid unit price check:
 A small number of records with zero or negative unit prices were detected and flagged as pricing anomalies.
+
+
+# add indexes
+
+CREATE INDEX idx_invoice_stock
+ON ecommerce_orders (InvoiceNo, StockCode);
+
+CREATE INDEX idx_invoicedate
+ON ecommerce_orders (InvoiceDate);
+
+CREATE INDEX idx_country
+ON ecommerce_orders (Country);
+
+EXPLAIN
+SELECT InvoiceNo, StockCode, COUNT(*)
+FROM ecommerce_orders
+GROUP BY InvoiceNo, StockCode
+HAVING COUNT(*) > 1;
