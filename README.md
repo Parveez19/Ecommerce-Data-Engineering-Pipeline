@@ -121,3 +121,6 @@ HAVING COUNT(*) > 1;
 - Batch inserts with MySQL
 - Environment-based configuration
 - Fact table: fact_sales
+
+## Next Phase
+- Implement incremental load using InvoiceDate watermark
