@@ -114,3 +114,10 @@ SELECT InvoiceNo, StockCode, COUNT(*)
 FROM ecommerce_orders
 GROUP BY InvoiceNo, StockCode
 HAVING COUNT(*) > 1;
+
+## Phase 5 – ETL Pipeline (Completed)
+- Built modular ETL (Extract, Transform, Load)
+- Implemented idempotent raw-to-fact loading
+- Batch inserts with MySQL
+- Environment-based configuration
+- Fact table: fact_sales
