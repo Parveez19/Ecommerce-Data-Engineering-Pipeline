@@ -122,5 +122,7 @@ HAVING COUNT(*) > 1;
 - Environment-based configuration
 - Fact table: fact_sales
 
+Docs: note completion of Phase 5 ETL pipeline
+
 ## Next Phase
 - Implement incremental load using InvoiceDate watermark
