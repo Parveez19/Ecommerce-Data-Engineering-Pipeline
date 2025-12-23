@@ -1,5 +1,5 @@
 import mysql.connector
-from etl.config import DB_CONFIG
+from config.config import DB_CONFIG
 
 def load_data(df):
     conn = mysql.connector.connect(**DB_CONFIG)

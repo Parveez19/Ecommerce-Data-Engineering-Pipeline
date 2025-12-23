@@ -3,7 +3,8 @@ from etl.transform import transform_data
 from etl.load import load_data
 
 def run_pipeline():
-    df = extract_data("data.csv")
+    RAW_DATA_PATH = "data/raw/data.csv"
+    df= extract_data(RAW_DATA_PATH)
     df = transform_data(df)
     load_data(df)
 
