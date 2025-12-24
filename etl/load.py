@@ -1,24 +1,18 @@
-import mysql.connector
-from config.config import DB_CONFIG
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
-def load_data(df):
-    conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor()
+load_dotenv()
 
-    insert_query = """
-    INSERT INTO fact_sales
-    (InvoiceNo, StockCode, Description, Quantity, InvoiceDate, UnitPrice, Country, TotalPrice)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
 
-    data_list = df.astype(object).values.tolist()
-    batch_size = 5000
+DB_URL = (
+    f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}"
+    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
-    for i in range(0, len(data_list), batch_size):
-        batch = data_list[i:i+batch_size]
-        cursor.executemany(insert_query, batch)
-        conn.commit()
-        print(f"Inserted: {i + len(batch)} rows")
-
-    cursor.close()
-    conn.close()
+engine = create_engine(DB_URL)
