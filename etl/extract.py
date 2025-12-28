@@ -1,19 +1,25 @@
-from pathlib import Path
 import pandas as pd
+from dotenv import load_dotenv
 import logging
+import os
 
-def extract_data(csv_path: str) -> pd.DataFrame:
-    csv_file = Path(csv_path)
+load_dotenv()
 
-    if not csv_file.exists():
-        logging.error(f"CSV file not found: {csv_file}")
-        raise FileNotFoundError(f"CSV file not found: {csv_file}")
+def extract_data(s3_path: str) -> pd.DataFrame:
+    logging.info(f"Extracting data from: {s3_path}")
+    
+    try:
+        df = pd.read_csv(s3_path, encoding="latin1")
 
-    df = pd.read_csv(csv_file, encoding="latin1")
+        if df.empty:
+            logging.warning("Extracted DataFrame is empty")
 
-    if df.empty:
-        logging.warning("Extracted DataFrame is empty")
+        logging.info(f"Extracted {len(df)} rows")
+        return df
 
-    logging.info(f"Extracted {len(df)} rows from {csv_file}")
+    except Exception as e:
+        logging.error(f"Error reading from S3: {e}")
+        raise
 
-    return df
+actual_path = os.getenv("DB_s3")
+my_dataframe = extract_data(actual_path)
