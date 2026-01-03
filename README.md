@@ -1,43 +1,104 @@
-let's get started with ecommerce etl pipeline
+E-commerce ETL Pipeline
+Overview
 
-# E-commerce ETL Pipeline
+This project implements an end-to-end E-commerce ETL pipeline, progressing from raw CSV ingestion to analytical querying and optimized storage.
+The focus is on data quality, modular ETL design, schema-on-read analytics, and performance optimization.
 
-This project demonstrates a simple ETL pipeline using Python and MySQL.
+The pipeline evolves across phases to reflect real-world data engineering practices, not one-off scripts.
 
-## Dataset
-E-commerce transaction dataset from Kaggle.
+Dataset
 
-## Steps
-1. Load raw CSV data
-2. Clean invalid records (negative quantity, cancelled orders, missing values)
-3. Create derived column (TotalPrice)
-4. Load cleaned data into MySQL using batch inserts
+Public E-commerce transaction dataset (Kaggle)
 
-## Tech Stack
-- Python (Pandas)
-- MySQL
-- SQL
+Contains invoice-level transactional data:
 
-## How to Run
-1. Create MySQL database and table using `sql/ecommerce.sql`
-2. Update DB credentials in `scripts/load_to_mysql.py`
-3. Run:
-```bash
+Products
+
+Quantities
+
+Prices
+
+Customers
+
+Countries
+
+Timestamps
+
+Architecture (High Level)
+Raw CSV
+  ↓
+Python ETL (Extract → Transform → Load)
+  ↓
+MySQL (Operational Analytics)
+  ↓
+Processed Data in S3
+  ↓
+Athena (Schema-on-Read Analytics)
+  ↓
+Partitioned Data (Year / Month)
+
+Phase 1 — Core ETL (Python → MySQL)
+Objectives
+
+Build a modular, repeatable ETL pipeline
+
+Enforce data quality rules
+
+Load clean data into a relational store for analytics
+
+ETL Steps
+
+Extract
+
+Load raw CSV using Pandas
+
+Transform
+
+Remove invalid records:
+
+Negative or zero quantity
+
+Cancelled invoices
+
+Missing critical fields
+
+Create derived column:
+
+TotalPrice = Quantity × UnitPrice
+
+Normalize schema and datatypes
+
+Load
+
+Batch inserts into MySQL
+
+Idempotent raw-to-fact loading
+
+Fact table: fact_sales
+
+Tech Stack
+
+Python (Pandas)
+
+MySQL
+
+SQL
+
+How to Run
+# Create schema
+mysql < sql/ecommerce.sql
+
+# Update DB credentials
+vim scripts/load_to_mysql.py
+
+# Run ETL
 python scripts/load_to_mysql.py
 
+Phase 2 — SQL Analytics (MySQL)
 
+Analytical queries were written to validate data quality and extract business insights.
 
-
-
-## SQL Analytics (Phase 2)
-
-The following queries were used to analyze revenue distribution, product performance,
-and time-based trends using MySQL.
-
-
-
- 1. Total Revenue by Country
-
+Revenue by Country
 SELECT 
     Country,
     ROUND(SUM(TotalPrice), 2) AS total_revenue
@@ -46,8 +107,7 @@ WHERE Country IS NOT NULL
 GROUP BY Country
 ORDER BY total_revenue DESC;
 
-2. Top 10 Products by Revenue (Excluding Non-Product SKUs)
-
+Top 10 Products by Revenue
 SELECT 
     StockCode,
     Description,
@@ -58,15 +118,15 @@ GROUP BY StockCode, Description
 ORDER BY product_revenue DESC
 LIMIT 10;
 
-3. Daily Revenue Trend
+Daily Revenue Trend
 SELECT 
     DATE(InvoiceDate) AS order_date,
     ROUND(SUM(TotalPrice), 2) AS daily_revenue
 FROM ecommerce_orders
 GROUP BY DATE(InvoiceDate)
-ORDER BY order_date ASC;
+ORDER BY order_date;
 
-4 — MONTHLY REVENUE TREND
+Monthly Revenue Trend
 SELECT
     YEAR(InvoiceDate) AS year,
     MONTH(InvoiceDate) AS month,
@@ -75,7 +135,7 @@ FROM ecommerce_orders
 GROUP BY YEAR(InvoiceDate), MONTH(InvoiceDate)
 ORDER BY year, month;
 
-5-Average Order Value
+Average Order Value
 SELECT
     ROUND(AVG(invoice_revenue), 2) AS average_order_value
 FROM (
@@ -86,19 +146,23 @@ FROM (
     GROUP BY InvoiceNo
 ) t;
 
+Data Quality Validation
 
+Duplicate invoice-product combinations
 
-data quality validation and findings
+Detected and flagged
 
+May represent legitimate split quantities or upstream inconsistencies
 
-Duplicate record check:
-Duplicate invoice–product combinations were detected and flagged for further business review, as duplicates may represent legitimate split quantities or data inconsistencies.
+Invalid pricing
 
-invalid unit price check:
-A small number of records with zero or negative unit prices were detected and flagged as pricing anomalies.
+Zero or negative unit prices identified
 
+Flagged as pricing anomalies for downstream handling
 
-# add indexes
+Indexing & Query Optimization
+
+Indexes added to improve analytical performance:
 
 CREATE INDEX idx_invoice_stock
 ON ecommerce_orders (InvoiceNo, StockCode);
@@ -109,20 +173,55 @@ ON ecommerce_orders (InvoiceDate);
 CREATE INDEX idx_country
 ON ecommerce_orders (Country);
 
-EXPLAIN
-SELECT InvoiceNo, StockCode, COUNT(*)
-FROM ecommerce_orders
-GROUP BY InvoiceNo, StockCode
-HAVING COUNT(*) > 1;
 
-## Phase 5 – ETL Pipeline (Completed)
-- Built modular ETL (Extract, Transform, Load)
-- Implemented idempotent raw-to-fact loading
-- Batch inserts with MySQL
-- Environment-based configuration
-- Fact table: fact_sales
+Validation using EXPLAIN confirmed reduced scan cost for aggregation queries.
 
-Docs: note completion of Phase 5 ETL pipeline
+Phase 3 — Cloud Analytics (S3 + Athena)
+Objectives
 
-## Next Phase
-- Implement incremental load using InvoiceDate watermark
+Move from database-bound analytics to schema-on-read
+
+Query large datasets directly from S3
+
+Key Concepts Implemented
+
+External tables in Athena
+
+CSV ingestion using OpenCSVSerde
+
+Explicit schema alignment
+
+Timestamp casting at query time
+
+Phase 4 — Partitioning (Athena Optimization)
+
+Processed data was reorganized into a partitioned S3 layout:
+
+Processed/
+ └── year=2011/
+     └── month=07/
+         └── data.csv
+
+Benefits
+
+Reduced data scanned per query
+
+Lower Athena query cost
+
+Faster execution using partition pruning
+
+Partitions were registered using:
+
+MSCK REPAIR TABLE ecommerce_sales_partitioned;
+
+Phase 5 — ETL Pipeline Refinement (Completed)
+
+Modular ETL design
+
+Idempotent raw-to-fact loading
+
+Batch inserts
+
+Environment-based configuration
+
+Fact table modeling (fact_sales)
